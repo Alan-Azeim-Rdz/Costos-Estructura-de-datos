@@ -9,7 +9,7 @@ namespace Costos__Estructura_de_datos
         string CurrentYear = Convert.ToString(DateTime.Now);
         int Index = 0;
         int Matriz = 0;
-
+        private Queue<MovimientoInventario> QueueofInventori = new Queue<MovimientoInventario>();
 
         private void BtnAdd_Click(object sender, EventArgs e)
         {
@@ -54,6 +54,7 @@ namespace Costos__Estructura_de_datos
                     }
 
 
+
                     // Agregar una nueva fila vacía
                     int newRowIndex = DataGridAlmacen.Rows.Add();
 
@@ -61,56 +62,79 @@ namespace Costos__Estructura_de_datos
                     int typeColumnIndex = CmBoxDataType.SelectedIndex == 0 ? 1 : 2;
 
                     // Asignar valores a las celdas específicas de la nueva fila
-                    DataGridAlmacen.Rows[newRowIndex].Cells[0].Value = DataTimeDay.Value; 
+                    DataGridAlmacen.Rows[newRowIndex].Cells[0].Value = DataTimeDay.Value;
 
-                    if (newRowIndex == 0)
+                    // Si es una entrada
+                    if (CmBoxDataType.SelectedIndex == 0)
                     {
-                        if(ComBoxFormula.SelectedIndex == 0)
+                        if (newRowIndex == 0)
                         {
-                            // Sumar la cantidad del movimiento anterior
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = TxtQuantity.Text;
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
                         }
-                        else if (ComBoxFormula.SelectedIndex == 1)
+                        else
                         {
-                            // Restar la cantidad del movimiento anterior
+                            int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value);
+                            int newQuantity = previousQuantity + Convert.ToInt32(TxtQuantity.Text);
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = TxtQuantity.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = TxtPrice.Text;
-                        }
-                       
-                    }
-                    else if (newRowIndex > 0)
-                    {
-                        if (CmBoxDataType.SelectedIndex == 0 && DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value != null)
-                        {
-                            int Result = Convert.ToInt32(TxtQuantity.Text) + Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value);
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = Result;
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = newQuantity;
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
                         }
-                        else if (CmBoxDataType.SelectedIndex == 1 && DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value != null)
-                        {
-                            int Result2 = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value) - Convert.ToInt32(TxtQuantity.Text);
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = Result2;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = TxtPrice.Text; // Columna 1 o 2: Cantidad según tipo
-                        }
+
+                        // Agregar la entrada a la cola
+                        QueueofInventori.Enqueue(new MovimientoInventario(DataTimeDay.Value, CmBoxDataType.Text, Convert.ToInt32(TxtPrice.Text), Convert.ToInt32(TxtQuantity.Text)));
                     }
+                    // Si es una salida
+                    else if (CmBoxDataType.SelectedIndex == 1)
+                    {
+                        if (QueueofInventori.Count == 0)
+                        {
+                            MessageBox.Show("No puedes sacar artículos porque el almacén está vacío");
+                            DataGridAlmacen.Rows.RemoveAt(newRowIndex);
+                            return;
+                        }
 
-                       
+                        int remainingQuantity = Convert.ToInt32(TxtQuantity.Text);
+                        int totalCost = 0;
 
+                        while (remainingQuantity > 0 && QueueofInventori.Count > 0)
+                        {
+                            MovimientoInventario firstEntry = QueueofInventori.Peek(); // Obtenemos la primera entrada sin eliminarla
 
+                            if (firstEntry.Cantidad <= remainingQuantity)
+                            {
+                                // Usamos toda la cantidad de la primera entrada
+                                remainingQuantity -= firstEntry.Cantidad;
+                                totalCost += firstEntry.Cantidad * firstEntry.Precio;
+                                QueueofInventori.Dequeue(); // Eliminamos la entrada ya que se agotó
+                            }
+                            else
+                            {
+                                // Usamos una parte de la cantidad de la primera entrada
+                                totalCost += remainingQuantity * firstEntry.Precio;
+                                firstEntry.Cantidad -= remainingQuantity;
+                                remainingQuantity = 0; // Terminamos la salida
+                            }
+                        }
 
+                        if (remainingQuantity > 0)
+                        {
+                            MessageBox.Show("No hay suficiente inventario para completar la salida");
+                            DataGridAlmacen.Rows.RemoveAt(newRowIndex);
+                            return;
+                        }
 
+                        int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value);
+                        int newQuantity = previousQuantity - Convert.ToInt32(TxtQuantity.Text);
 
-
-                    // Agregar a la cola
-                    Queue<MovimientoInventario> QueueofInventori = new Queue<MovimientoInventario>();
-
-                    // Agregar un elemento a la cola
-                    QueueofInventori.Enqueue(new MovimientoInventario(DataTimeDay.Value, CmBoxDataType.Text, Convert.ToInt32(TxtPrice.Text), Convert.ToInt32(TxtQuantity.Text)));
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = newQuantity;
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = totalCost / Convert.ToInt32(TxtQuantity.Text); // Precio unitario promedio
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost; // Costo total de la salida
+                    }
 
                     // Mostrar cuántos elementos hay en la cola
                     MessageBox.Show("Cantidad de objetos en la cola: " + QueueofInventori.Count);
@@ -120,6 +144,7 @@ namespace Costos__Estructura_de_datos
                     {
                         MessageBox.Show(item.ToString());
                     }
+
 
 
 
@@ -146,6 +171,12 @@ namespace Costos__Estructura_de_datos
 
 
 
+        }
+
+        private void BtnAccept_Click(object sender, EventArgs e)
+        {
+            // Mostrar cuántos elementos hay en la cola
+            MessageBox.Show("Cantidad de objetos en la cola: " + QueueofInventori.Count);
         }
     }
 }
