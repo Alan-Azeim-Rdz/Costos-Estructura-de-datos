@@ -59,56 +59,75 @@
             // 
             DataGridAlmacen.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             DataGridAlmacen.Columns.AddRange(new DataGridViewColumn[] { dia, Entrada, Salida, Existencia, Costo, Debe, Haber, Sldo });
-            DataGridAlmacen.Location = new Point(426, 12);
+            DataGridAlmacen.Location = new Point(487, 16);
+            DataGridAlmacen.Margin = new Padding(3, 4, 3, 4);
             DataGridAlmacen.Name = "DataGridAlmacen";
-            DataGridAlmacen.Size = new Size(843, 553);
+            DataGridAlmacen.RowHeadersWidth = 51;
+            DataGridAlmacen.Size = new Size(1053, 737);
             DataGridAlmacen.TabIndex = 0;
             // 
             // dia
             // 
             dia.HeaderText = "Dia";
+            dia.MinimumWidth = 6;
             dia.Name = "dia";
+            dia.Width = 125;
             // 
             // Entrada
             // 
             Entrada.HeaderText = "Entrada";
+            Entrada.MinimumWidth = 6;
             Entrada.Name = "Entrada";
+            Entrada.Width = 125;
             // 
             // Salida
             // 
             Salida.HeaderText = "Salida";
+            Salida.MinimumWidth = 6;
             Salida.Name = "Salida";
+            Salida.Width = 125;
             // 
             // Existencia
             // 
             Existencia.HeaderText = "Existencia";
+            Existencia.MinimumWidth = 6;
             Existencia.Name = "Existencia";
+            Existencia.Width = 125;
             // 
             // Costo
             // 
             Costo.HeaderText = "Costo";
+            Costo.MinimumWidth = 6;
             Costo.Name = "Costo";
+            Costo.Width = 125;
             // 
             // Debe
             // 
             Debe.HeaderText = "Debe";
+            Debe.MinimumWidth = 6;
             Debe.Name = "Debe";
+            Debe.Width = 125;
             // 
             // Haber
             // 
             Haber.HeaderText = "Haber";
+            Haber.MinimumWidth = 6;
             Haber.Name = "Haber";
+            Haber.Width = 125;
             // 
             // Sldo
             // 
             Sldo.HeaderText = "Saldo";
+            Sldo.MinimumWidth = 6;
             Sldo.Name = "Sldo";
+            Sldo.Width = 125;
             // 
             // BtnAdd
             // 
-            BtnAdd.Location = new Point(214, 330);
+            BtnAdd.Location = new Point(245, 440);
+            BtnAdd.Margin = new Padding(3, 4, 3, 4);
             BtnAdd.Name = "BtnAdd";
-            BtnAdd.Size = new Size(154, 54);
+            BtnAdd.Size = new Size(176, 72);
             BtnAdd.TabIndex = 1;
             BtnAdd.Text = "Agregar";
             BtnAdd.UseVisualStyleBackColor = true;
@@ -116,9 +135,10 @@
             // 
             // BtnAccept
             // 
-            BtnAccept.Location = new Point(108, 461);
+            BtnAccept.Location = new Point(123, 615);
+            BtnAccept.Margin = new Padding(3, 4, 3, 4);
             BtnAccept.Name = "BtnAccept";
-            BtnAccept.Size = new Size(154, 54);
+            BtnAccept.Size = new Size(176, 72);
             BtnAccept.TabIndex = 2;
             BtnAccept.Text = "Aceptar";
             BtnAccept.UseVisualStyleBackColor = true;
@@ -126,35 +146,35 @@
             // LblDay
             // 
             LblDay.AutoSize = true;
-            LblDay.Location = new Point(12, 28);
+            LblDay.Location = new Point(14, 37);
             LblDay.Name = "LblDay";
-            LblDay.Size = new Size(27, 15);
+            LblDay.Size = new Size(35, 20);
             LblDay.TabIndex = 3;
             LblDay.Text = "Day";
             // 
             // LblType
             // 
             LblType.AutoSize = true;
-            LblType.Location = new Point(12, 124);
+            LblType.Location = new Point(14, 165);
             LblType.Name = "LblType";
-            LblType.Size = new Size(142, 15);
+            LblType.Size = new Size(183, 20);
             LblType.TabIndex = 4;
             LblType.Text = "Selecciona el tipo de dato";
             // 
             // LblDatOutput
             // 
             LblDatOutput.AutoSize = true;
-            LblDatOutput.Location = new Point(12, 225);
+            LblDatOutput.Location = new Point(14, 300);
             LblDatOutput.Name = "LblDatOutput";
-            LblDatOutput.Size = new Size(0, 15);
+            LblDatOutput.Size = new Size(0, 20);
             LblDatOutput.TabIndex = 5;
             // 
             // LblCost
             // 
             LblCost.AutoSize = true;
-            LblCost.Location = new Point(12, 168);
+            LblCost.Location = new Point(14, 224);
             LblCost.Name = "LblCost";
-            LblCost.Size = new Size(0, 15);
+            LblCost.Size = new Size(0, 20);
             LblCost.TabIndex = 6;
             // 
             // CmBoxDataType
@@ -162,58 +182,63 @@
             CmBoxDataType.DropDownStyle = ComboBoxStyle.DropDownList;
             CmBoxDataType.FormattingEnabled = true;
             CmBoxDataType.Items.AddRange(new object[] { "Entrada", "Salida" });
-            CmBoxDataType.Location = new Point(12, 142);
+            CmBoxDataType.Location = new Point(14, 189);
+            CmBoxDataType.Margin = new Padding(3, 4, 3, 4);
             CmBoxDataType.Name = "CmBoxDataType";
-            CmBoxDataType.Size = new Size(121, 23);
+            CmBoxDataType.Size = new Size(138, 28);
             CmBoxDataType.TabIndex = 7;
             // 
             // DataTimeDay
             // 
             DataTimeDay.Format = DateTimePickerFormat.Short;
             DataTimeDay.ImeMode = ImeMode.NoControl;
-            DataTimeDay.Location = new Point(12, 46);
+            DataTimeDay.Location = new Point(14, 61);
+            DataTimeDay.Margin = new Padding(3, 4, 3, 4);
             DataTimeDay.Name = "DataTimeDay";
-            DataTimeDay.Size = new Size(121, 23);
+            DataTimeDay.Size = new Size(138, 27);
             DataTimeDay.TabIndex = 8;
             DataTimeDay.Value = new DateTime(2024, 8, 27, 0, 0, 0, 0);
             // 
             // TxtQuantity
             // 
-            TxtQuantity.Location = new Point(193, 142);
+            TxtQuantity.Location = new Point(221, 189);
+            TxtQuantity.Margin = new Padding(3, 4, 3, 4);
             TxtQuantity.Name = "TxtQuantity";
-            TxtQuantity.Size = new Size(161, 23);
+            TxtQuantity.Size = new Size(183, 27);
             TxtQuantity.TabIndex = 9;
             // 
             // LblContain
             // 
             LblContain.AutoSize = true;
-            LblContain.Location = new Point(193, 124);
+            LblContain.Location = new Point(221, 165);
             LblContain.Name = "LblContain";
-            LblContain.Size = new Size(55, 15);
+            LblContain.Size = new Size(69, 20);
             LblContain.TabIndex = 10;
             LblContain.Text = "Cantidad";
             // 
             // LblPrice
             // 
             LblPrice.AutoSize = true;
-            LblPrice.Location = new Point(12, 207);
+            LblPrice.Location = new Point(14, 276);
             LblPrice.Name = "LblPrice";
-            LblPrice.Size = new Size(82, 15);
+            LblPrice.Size = new Size(102, 20);
             LblPrice.TabIndex = 12;
             LblPrice.Text = "Precio / Costo";
             // 
             // TxtPrice
             // 
-            TxtPrice.Location = new Point(12, 225);
+            TxtPrice.Location = new Point(14, 300);
+            TxtPrice.Margin = new Padding(3, 4, 3, 4);
             TxtPrice.Name = "TxtPrice";
-            TxtPrice.Size = new Size(161, 23);
+            TxtPrice.Size = new Size(183, 27);
             TxtPrice.TabIndex = 11;
             // 
             // BtnEdit
             // 
-            BtnEdit.Location = new Point(12, 330);
+            BtnEdit.Location = new Point(14, 440);
+            BtnEdit.Margin = new Padding(3, 4, 3, 4);
             BtnEdit.Name = "BtnEdit";
-            BtnEdit.Size = new Size(154, 54);
+            BtnEdit.Size = new Size(176, 72);
             BtnEdit.TabIndex = 13;
             BtnEdit.Text = "Editar";
             BtnEdit.UseVisualStyleBackColor = true;
@@ -223,25 +248,26 @@
             ComBoxFormula.DropDownStyle = ComboBoxStyle.DropDownList;
             ComBoxFormula.FormattingEnabled = true;
             ComBoxFormula.Items.AddRange(new object[] { "PEPS", "UEPS", "PROMEDIO" });
-            ComBoxFormula.Location = new Point(193, 46);
+            ComBoxFormula.Location = new Point(221, 61);
+            ComBoxFormula.Margin = new Padding(3, 4, 3, 4);
             ComBoxFormula.Name = "ComBoxFormula";
-            ComBoxFormula.Size = new Size(161, 23);
+            ComBoxFormula.Size = new Size(183, 28);
             ComBoxFormula.TabIndex = 14;
             // 
             // F
             // 
             F.AutoSize = true;
-            F.Location = new Point(193, 28);
+            F.Location = new Point(221, 37);
             F.Name = "F";
-            F.Size = new Size(51, 15);
+            F.Size = new Size(63, 20);
             F.TabIndex = 15;
             F.Text = "Formula";
             // 
             // Form1
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1281, 589);
+            ClientSize = new Size(1556, 758);
             Controls.Add(F);
             Controls.Add(ComBoxFormula);
             Controls.Add(BtnEdit);
@@ -258,6 +284,7 @@
             Controls.Add(BtnAccept);
             Controls.Add(BtnAdd);
             Controls.Add(DataGridAlmacen);
+            Margin = new Padding(3, 4, 3, 4);
             Name = "Form1";
             Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)DataGridAlmacen).EndInit();
