@@ -10,6 +10,7 @@ namespace Costos__Estructura_de_datos
         int Index = 0;
         int Matriz = 0;
         private Queue<MovimientoInventario> QueueofInventori = new Queue<MovimientoInventario>();
+        private Stack<MovimientoInventario> StackOfInventario = new Stack<MovimientoInventario>();
 
         private void BtnAdd_Click(object sender, EventArgs e)
         {
@@ -172,7 +173,124 @@ namespace Costos__Estructura_de_datos
                 case "UEPS":
 
 
+                    if (selectedYear == CurrentYear)
+                    {
+                        MessageBox.Show("La fecha debe de ser de este mismo año");
+                        return;
+                    }
+                    if (ComBoxFormula.SelectedIndex == -1)
+                    {
+                        MessageBox.Show("Debes de seleccionar un tipo de fórmula");
+                        return;
+                    }
+                    if (CmBoxDataType.SelectedIndex == -1)
+                    {
+                        MessageBox.Show("Debes de seleccionar un tipo de dato");
+                        return;
+                    }
+                    if (!int.TryParse(TxtQuantity.Text, out result))
+                    {
+                        MessageBox.Show("No puedes ingresar letras y tampoco puedes dejar este campo vacío");
+                        return;
+                    }
+                    if (requierePrecio && !int.TryParse(TxtPrice.Text, out result))
+                    {
+                        MessageBox.Show("No puedes ingresar letras en el campo de precio y tampoco puedes dejar este campo vacío");
+                        return;
+                    }
 
+                    // Agregar una nueva fila vacía y obtener el índice de la nueva fila
+                    newRowIndex = DataGridAlmacen.Rows.Add();
+
+                    // Determinar la columna para el tipo de dato
+                    typeColumnIndex = CmBoxDataType.SelectedIndex == 0 ? 1 : 2;
+
+                    // Asignar valores a las celdas específicas de la nueva fila
+                    DataGridAlmacen.Rows[newRowIndex].Cells[0].Value = DataTimeDay.Value;
+
+                    // Si es una entrada
+                    if (CmBoxDataType.SelectedIndex == 0)
+                    {
+                        if (newRowIndex == 0)
+                        {
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = TxtQuantity.Text;
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
+                        }
+                        else
+                        {
+                            int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value);
+                            int newQuantity = previousQuantity + Convert.ToInt32(TxtQuantity.Text);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = newQuantity;
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 6].Value) + Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
+                        }
+
+                        // Agregar la entrada a la pila
+                        StackOfInventario.Push(new MovimientoInventario(DataTimeDay.Value, CmBoxDataType.Text, Convert.ToInt32(TxtPrice.Text), Convert.ToInt32(TxtQuantity.Text)));
+                    }
+                    // Si es una salida
+                    else if (CmBoxDataType.SelectedIndex == 1)
+                    {
+                        if (StackOfInventario.Count == 0)
+                        {
+                            MessageBox.Show("No puedes sacar artículos porque el almacén está vacío");
+                            DataGridAlmacen.Rows.RemoveAt(newRowIndex);
+                            return;
+                        }
+
+                        int remainingQuantity = Convert.ToInt32(TxtQuantity.Text);
+                        int totalCost = 0;
+
+                        // Verificación previa: Calcula si hay suficiente inventario sin modificar la pila
+                        int cantidadDisponible = 0;
+                        foreach (var item in StackOfInventario)
+                        {
+                            cantidadDisponible += item.Cantidad;
+                        }
+
+                        if (remainingQuantity > cantidadDisponible)
+                        {
+                            MessageBox.Show("No hay suficiente inventario para completar la salida");
+                            DataGridAlmacen.Rows.RemoveAt(newRowIndex);
+                            return;
+                        }
+
+                        // Modificación real: Ahora que sabemos que hay suficiente inventario, modificamos la pila
+                        while (remainingQuantity > 0 && StackOfInventario.Count > 0)
+                        {
+                            MovimientoInventario lastEntry = StackOfInventario.Peek(); // Obtenemos la última entrada sin eliminarla
+
+                            if (lastEntry.Cantidad <= remainingQuantity)
+                            {
+                                // Usamos toda la cantidad de la última entrada
+                                remainingQuantity -= lastEntry.Cantidad;
+                                totalCost += lastEntry.Cantidad * lastEntry.Precio;
+                                StackOfInventario.Pop(); // Eliminamos la entrada ya que se agotó
+                            }
+                            else
+                            {
+                                // Usamos una parte de la cantidad de la última entrada
+                                totalCost += remainingQuantity * lastEntry.Precio;
+                                lastEntry.Cantidad -= remainingQuantity;
+                                remainingQuantity = 0; // Terminamos la salida
+                            }
+                        }
+
+                        // Actualizamos el DataGrid con la información de la salida
+                        int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value);
+                        int newQuantity = previousQuantity - Convert.ToInt32(TxtQuantity.Text);
+
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = newQuantity;
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = totalCost / Convert.ToInt32(TxtQuantity.Text); // Precio unitario promedio
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost; // Costo total de la salida
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 5].Value) - Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value);
+                    }
 
                     break;
 
@@ -223,24 +341,21 @@ namespace Costos__Estructura_de_datos
             }
             else
             {
-                DialogResult Election = MessageBox.Show("Si cambias de formula se borraran los datos de la tabla", "estas deacuerdo con esto?", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
-            }
-            
-                
+                DialogResult Election = MessageBox.Show("Si cambias de fórmula se borrarán los datos de la tabla. ¿Estás de acuerdo con esto?", "Confirmación", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
 
-                else if (Election == DialogResult.OK)
+                if (Election == DialogResult.OK)
                 {
                     DataGridAlmacen.Rows.Clear();
-
-                    MessageBox.Show("Listo porfavor continua");
+                    ComBoxFormula.SelectedIndex = -1;
+                    MessageBox.Show("Listo, por favor continúa.");
                 }
                 else if (Election == DialogResult.Cancel)
                 {
                     MessageBox.Show("Has seleccionado Cancel.");
                 }
-            
+            }
 
- 
+
 
 
         }
