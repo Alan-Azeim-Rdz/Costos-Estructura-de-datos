@@ -25,6 +25,8 @@ namespace Costos__Estructura_de_datos
 
             string Selection = ComBoxFormula.SelectedItem.ToString();
 
+            // Verificar si el precio debe ser solicitado
+            bool requierePrecio = CmBoxDataType.SelectedIndex == 0;
 
 
             switch (Selection)
@@ -46,10 +48,16 @@ namespace Costos__Estructura_de_datos
                     {
                         MessageBox.Show("Debes de selecionar un tipo de dato");
                         return;
+
                     }
-                    if (!int.TryParse(TxtPrice.Text, out int result) || !int.TryParse(TxtQuantity.Text, out result))
+                    if (!int.TryParse(TxtQuantity.Text, out int result))
                     {
                         MessageBox.Show("No puedes ingresar letras y tampoco puedes dejar este campo vacio");
+                        return;
+                    }
+                    if (requierePrecio && !int.TryParse(TxtPrice.Text, out result))
+                    {
+                        MessageBox.Show("No puedes ingresar letras en el campo de precio y tampoco puedes dejar este campo vacío");
                         return;
                     }
 
@@ -64,6 +72,8 @@ namespace Costos__Estructura_de_datos
                     // Asignar valores a las celdas específicas de la nueva fila
                     DataGridAlmacen.Rows[newRowIndex].Cells[0].Value = DataTimeDay.Value;
 
+
+
                     // Si es una entrada
                     if (CmBoxDataType.SelectedIndex == 0)
                     {
@@ -73,6 +83,8 @@ namespace Costos__Estructura_de_datos
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = TxtQuantity.Text;
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
+
                         }
                         else
                         {
@@ -82,6 +94,9 @@ namespace Costos__Estructura_de_datos
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = newQuantity;
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value) + Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 6].Value);
+
+
                         }
 
                         // Agregar la entrada a la cola
@@ -100,6 +115,21 @@ namespace Costos__Estructura_de_datos
                         int remainingQuantity = Convert.ToInt32(TxtQuantity.Text);
                         int totalCost = 0;
 
+                        // Verificación previa: Calcula si hay suficiente inventario sin modificar la cola
+                        int cantidadDisponible = 0;
+                        foreach (var item in QueueofInventori)
+                        {
+                            cantidadDisponible += item.Cantidad;
+                        }
+
+                        if (remainingQuantity > cantidadDisponible)
+                        {
+                            MessageBox.Show("No hay suficiente inventario para completar la salida");
+                            DataGridAlmacen.Rows.RemoveAt(newRowIndex);
+                            return;
+                        }
+
+                        // Modificación real: Ahora que sabemos que hay suficiente inventario, modificamos la cola
                         while (remainingQuantity > 0 && QueueofInventori.Count > 0)
                         {
                             MovimientoInventario firstEntry = QueueofInventori.Peek(); // Obtenemos la primera entrada sin eliminarla
@@ -120,13 +150,7 @@ namespace Costos__Estructura_de_datos
                             }
                         }
 
-                        if (remainingQuantity > 0)
-                        {
-                            MessageBox.Show("No hay suficiente inventario para completar la salida");
-                            DataGridAlmacen.Rows.RemoveAt(newRowIndex);
-                            return;
-                        }
-
+                        // Actualizamos el DataGrid con la información de la salida
                         int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value);
                         int newQuantity = previousQuantity - Convert.ToInt32(TxtQuantity.Text);
 
@@ -134,17 +158,9 @@ namespace Costos__Estructura_de_datos
                         DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = newQuantity;
                         DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = totalCost / Convert.ToInt32(TxtQuantity.Text); // Precio unitario promedio
                         DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost; // Costo total de la salida
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 5].Value) - Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value);
+
                     }
-
-                    // Mostrar cuántos elementos hay en la cola
-                    MessageBox.Show("Cantidad de objetos en la cola: " + QueueofInventori.Count);
-
-                    // Recorrer la cola sin borrar los elementos
-                    foreach (var item in QueueofInventori)
-                    {
-                        MessageBox.Show(item.ToString());
-                    }
-
 
 
 
@@ -154,6 +170,8 @@ namespace Costos__Estructura_de_datos
 
 
                 case "UEPS":
+
+
 
 
                     break;
@@ -177,6 +195,54 @@ namespace Costos__Estructura_de_datos
         {
             // Mostrar cuántos elementos hay en la cola
             MessageBox.Show("Cantidad de objetos en la cola: " + QueueofInventori.Count);
+        }
+
+        private void CmBoxDataType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Verificar el índice seleccionado en CmBoxDataType
+            if (CmBoxDataType.SelectedIndex == 1)
+            {
+                // Deshabilitar TxtPrice si el índice es 1
+                TxtPrice.Enabled = false;
+                TxtPrice.Text = ""; // Opcional: Limpia el texto para asegurarse de que no haya valores.
+            }
+            else
+            {
+                // Habilitar TxtPrice si el índice no es 1
+                TxtPrice.Enabled = true;
+            }
+        }
+
+
+
+        private void ComBoxFormula_Click(object sender, EventArgs e)
+        {
+            if (ComBoxFormula.SelectedIndex == -1)
+            {
+                return;
+            }
+            else
+            {
+                DialogResult Election = MessageBox.Show("Si cambias de formula se borraran los datos de la tabla", "estas deacuerdo con esto?", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+            }
+            
+                
+
+                else if (Election == DialogResult.OK)
+                {
+                    DataGridAlmacen.Rows.Clear();
+
+                    MessageBox.Show("Listo porfavor continua");
+                }
+                else if (Election == DialogResult.Cancel)
+                {
+                    MessageBox.Show("Has seleccionado Cancel.");
+                }
+            
+
+ 
+
+
         }
     }
 }

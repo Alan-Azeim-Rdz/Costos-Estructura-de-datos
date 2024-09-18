@@ -184,6 +184,7 @@
             CmBoxDataType.Name = "CmBoxDataType";
             CmBoxDataType.Size = new Size(121, 23);
             CmBoxDataType.TabIndex = 7;
+            CmBoxDataType.SelectedIndexChanged += CmBoxDataType_SelectedIndexChanged;
             // 
             // DataTimeDay
             // 
@@ -245,6 +246,7 @@
             ComBoxFormula.Name = "ComBoxFormula";
             ComBoxFormula.Size = new Size(161, 23);
             ComBoxFormula.TabIndex = 14;
+            ComBoxFormula.Click += ComBoxFormula_Click;
             // 
             // F
             // 
