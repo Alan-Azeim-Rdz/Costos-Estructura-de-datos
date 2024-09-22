@@ -13,6 +13,8 @@ namespace Costos__Estructura_de_datos
         public int Precio { get; set; }
         public int Cantidad { get; set; }
 
+
+
         public MovimientoInventario()
         {
             Fecha = DateTime.Now;

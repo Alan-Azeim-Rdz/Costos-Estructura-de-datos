@@ -80,25 +80,30 @@ namespace Costos__Estructura_de_datos
                     {
                         if (newRowIndex == 0)
                         {
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = TxtQuantity.Text;
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = Convert.ToInt32(TxtQuantity.Text).ToString("N0");
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = Convert.ToInt32(TxtQuantity.Text).ToString("N0");
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
 
+                            int totalCost = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost.ToString("N0");
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = totalCost.ToString("N0");
                         }
                         else
                         {
-                            int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value);
+                            int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value.ToString().Replace(".", "").Replace(",", ""));
                             int newQuantity = previousQuantity + Convert.ToInt32(TxtQuantity.Text);
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = newQuantity;
+
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = Convert.ToInt32(TxtQuantity.Text).ToString("N0");
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = newQuantity.ToString("N0");
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value) + Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 6].Value);
 
+                            int currentCost = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = currentCost.ToString("N0");
 
+                            int previousTotal = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 6].Value.ToString().Replace(".", "").Replace(",", ""));
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = (currentCost + previousTotal).ToString("N0");
                         }
+
 
                         // Agregar la entrada a la cola
                         QueueofInventori.Enqueue(new MovimientoInventario(DataTimeDay.Value, CmBoxDataType.Text, Convert.ToInt32(TxtPrice.Text), Convert.ToInt32(TxtQuantity.Text)));
@@ -152,14 +157,18 @@ namespace Costos__Estructura_de_datos
                         }
 
                         // Actualizamos el DataGrid con la información de la salida
-                        int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value);
-                        int newQuantity = previousQuantity - Convert.ToInt32(TxtQuantity.Text);
+                        // Asegúrate de limpiar los valores de entrada
+                        int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value.ToString().Replace(".", "").Replace(",", ""));
+                        int newQuantity = previousQuantity - Convert.ToInt32(TxtQuantity.Text.Replace(".", "").Replace(",", ""));
 
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = newQuantity;
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = totalCost / Convert.ToInt32(TxtQuantity.Text); // Precio unitario promedio
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost; // Costo total de la salida
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 5].Value) - Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value);
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = Convert.ToInt32(TxtQuantity.Text.Replace(".", "").Replace(",", "")).ToString("N0");
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = newQuantity.ToString("N0");
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = (totalCost / Convert.ToInt32(TxtQuantity.Text.Replace(".", "").Replace(",", ""))).ToString("N0"); // Precio unitario promedio
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost.ToString("N0"); // Costo total de la salida
+
+                        // Asegúrate de limpiar el valor de la celda anterior al convertir
+                        int previousTotal = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 5].Value.ToString().Replace(".", "").Replace(",", ""));
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = (previousTotal - Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value.ToString().Replace(".", "").Replace(",", ""))).ToString("N0");
 
                     }
 
@@ -216,18 +225,26 @@ namespace Costos__Estructura_de_datos
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = TxtQuantity.Text;
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
+
+                            int totalPrice = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalPrice.ToString("N0");
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = totalPrice.ToString("N0");
                         }
                         else
                         {
-                            int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value);
+                            int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value.ToString().Replace(".", ""));
                             int newQuantity = previousQuantity + Convert.ToInt32(TxtQuantity.Text);
+
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = newQuantity;
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = newQuantity.ToString("N0");
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 6].Value) + Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
+
+                            int totalPrice = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalPrice.ToString("N0");
+
+                            // Aquí se convierte el valor de la celda anterior a int, eliminando las comas.
+                            int previousTotal = int.Parse(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 6].Value.ToString().Replace(".", ""));
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = (previousTotal + totalPrice).ToString("N0");
                         }
 
                         // Agregar la entrada a la pila
@@ -282,14 +299,23 @@ namespace Costos__Estructura_de_datos
                         }
 
                         // Actualizamos el DataGrid con la información de la salida
-                        int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value);
+                        int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value.ToString().Replace(".", "").Replace(",", ""));
                         int newQuantity = previousQuantity - Convert.ToInt32(TxtQuantity.Text);
 
                         DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = newQuantity;
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = totalCost / Convert.ToInt32(TxtQuantity.Text); // Precio unitario promedio
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost; // Costo total de la salida
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 5].Value) - Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value);
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = newQuantity.ToString("N0"); // Formato con comas
+
+                        // Calcula el precio unitario promedio
+                        int unitPriceAverage = totalCost / Convert.ToInt32(TxtQuantity.Text);
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = unitPriceAverage.ToString("N0"); // Formato con comas
+
+                        // Costo total de la salida
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost.ToString("N0"); // Formato con comas
+
+                        // Actualiza el total restante
+                        int previousTotal = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 5].Value.ToString().Replace(".", "").Replace(",", ""));
+                        int totalAfterOutput = previousTotal - Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value.ToString().Replace(".", "").Replace(",", ""));
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = totalAfterOutput.ToString("N0"); // Formato con comas
                     }
 
                     break;
@@ -299,6 +325,8 @@ namespace Costos__Estructura_de_datos
 
                 case "PROMEDIO":
 
+
+                   
 
                     break;
 
