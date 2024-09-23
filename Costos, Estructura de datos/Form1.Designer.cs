@@ -38,7 +38,6 @@
             Haber = new DataGridViewTextBoxColumn();
             Sldo = new DataGridViewTextBoxColumn();
             BtnAdd = new Button();
-            BtnAccept = new Button();
             LblDay = new Label();
             LblType = new Label();
             LblDatOutput = new Label();
@@ -49,7 +48,6 @@
             LblContain = new Label();
             LblPrice = new Label();
             TxtPrice = new TextBox();
-            BtnEdit = new Button();
             ComBoxFormula = new ComboBox();
             F = new Label();
             ((System.ComponentModel.ISupportInitialize)DataGridAlmacen).BeginInit();
@@ -123,23 +121,13 @@
             // 
             // BtnAdd
             // 
-            BtnAdd.Location = new Point(214, 330);
+            BtnAdd.Location = new Point(106, 376);
             BtnAdd.Name = "BtnAdd";
             BtnAdd.Size = new Size(154, 54);
             BtnAdd.TabIndex = 1;
             BtnAdd.Text = "Agregar";
             BtnAdd.UseVisualStyleBackColor = true;
             BtnAdd.Click += BtnAdd_Click;
-            // 
-            // BtnAccept
-            // 
-            BtnAccept.Location = new Point(108, 461);
-            BtnAccept.Name = "BtnAccept";
-            BtnAccept.Size = new Size(154, 54);
-            BtnAccept.TabIndex = 2;
-            BtnAccept.Text = "Aceptar";
-            BtnAccept.UseVisualStyleBackColor = true;
-            BtnAccept.Click += BtnAccept_Click;
             // 
             // LblDay
             // 
@@ -228,15 +216,6 @@
             TxtPrice.Size = new Size(161, 23);
             TxtPrice.TabIndex = 11;
             // 
-            // BtnEdit
-            // 
-            BtnEdit.Location = new Point(12, 330);
-            BtnEdit.Name = "BtnEdit";
-            BtnEdit.Size = new Size(154, 54);
-            BtnEdit.TabIndex = 13;
-            BtnEdit.Text = "Editar";
-            BtnEdit.UseVisualStyleBackColor = true;
-            // 
             // ComBoxFormula
             // 
             ComBoxFormula.DropDownStyle = ComboBoxStyle.DropDownList;
@@ -264,7 +243,6 @@
             ClientSize = new Size(1457, 568);
             Controls.Add(F);
             Controls.Add(ComBoxFormula);
-            Controls.Add(BtnEdit);
             Controls.Add(LblPrice);
             Controls.Add(TxtPrice);
             Controls.Add(LblContain);
@@ -275,7 +253,6 @@
             Controls.Add(LblDatOutput);
             Controls.Add(LblType);
             Controls.Add(LblDay);
-            Controls.Add(BtnAccept);
             Controls.Add(BtnAdd);
             Controls.Add(DataGridAlmacen);
             Name = "Form1";
@@ -297,7 +274,6 @@
         private DataGridViewTextBoxColumn Haber;
         private DataGridViewTextBoxColumn Sldo;
         private Button BtnAdd;
-        private Button BtnAccept;
         private Label LblDay;
         private Label LblType;
         private Label LblDatOutput;
@@ -308,7 +284,6 @@
         private Label LblContain;
         private Label LblPrice;
         private TextBox TxtPrice;
-        private Button BtnEdit;
         private ComboBox ComBoxFormula;
         private Label F;
     }

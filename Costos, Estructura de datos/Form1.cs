@@ -40,29 +40,30 @@ namespace Costos__Estructura_de_datos
                         MessageBox.Show("La fecha debe de ser de este mismo año");
                         return;
                     }
+
                     if (ComBoxFormula.SelectedIndex == -1)
                     {
-                        MessageBox.Show("Debes de selecionar un tipo de dato");
+                        MessageBox.Show("Debes de seleccionar un tipo de dato");
                         return;
                     }
+
                     if (CmBoxDataType.SelectedIndex == -1)
                     {
-                        MessageBox.Show("Debes de selecionar un tipo de dato");
+                        MessageBox.Show("Debes de seleccionar un tipo de dato");
                         return;
-
                     }
+
                     if (!int.TryParse(TxtQuantity.Text, out int result))
                     {
-                        MessageBox.Show("No puedes ingresar letras y tampoco puedes dejar este campo vacio");
+                        MessageBox.Show("No puedes ingresar letras y tampoco puedes dejar este campo vacío");
                         return;
                     }
+
                     if (requierePrecio && !int.TryParse(TxtPrice.Text, out result))
                     {
                         MessageBox.Show("No puedes ingresar letras en el campo de precio y tampoco puedes dejar este campo vacío");
                         return;
                     }
-
-
 
                     // Agregar una nueva fila vacía
                     int newRowIndex = DataGridAlmacen.Rows.Add();
@@ -72,8 +73,6 @@ namespace Costos__Estructura_de_datos
 
                     // Asignar valores a las celdas específicas de la nueva fila
                     DataGridAlmacen.Rows[newRowIndex].Cells[0].Value = DataTimeDay.Value;
-
-
 
                     // Si es una entrada
                     if (CmBoxDataType.SelectedIndex == 0)
@@ -104,7 +103,6 @@ namespace Costos__Estructura_de_datos
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = (currentCost + previousTotal).ToString("N0");
                         }
 
-
                         // Agregar la entrada a la cola
                         QueueofInventori.Enqueue(new MovimientoInventario(DataTimeDay.Value, CmBoxDataType.Text, Convert.ToInt32(TxtPrice.Text), Convert.ToInt32(TxtQuantity.Text)));
                     }
@@ -119,7 +117,9 @@ namespace Costos__Estructura_de_datos
                         }
 
                         int remainingQuantity = Convert.ToInt32(TxtQuantity.Text);
-                        int totalCost = 0;
+                        List<int> nodeCosts = new List<int>(); // Lista para almacenar los costos de cada nodo
+                        List<int> cantidadesUtilizadas = new List<int>(); // Lista para almacenar las cantidades utilizadas de cada nodo
+                        int nodeCount = 0; // Contador de nodos utilizados
 
                         // Verificación previa: Calcula si hay suficiente inventario sin modificar la cola
                         int cantidadDisponible = 0;
@@ -144,37 +144,52 @@ namespace Costos__Estructura_de_datos
                             {
                                 // Usamos toda la cantidad de la primera entrada
                                 remainingQuantity -= firstEntry.Cantidad;
-                                totalCost += firstEntry.Cantidad * firstEntry.Precio;
+                                cantidadesUtilizadas.Add(firstEntry.Cantidad); // Guardamos la cantidad utilizada
+                                nodeCosts.Add(firstEntry.Precio); // Añadir costo a la lista
                                 QueueofInventori.Dequeue(); // Eliminamos la entrada ya que se agotó
+                                nodeCount++; // Incrementamos el contador de nodos utilizados
                             }
                             else
                             {
                                 // Usamos una parte de la cantidad de la primera entrada
-                                totalCost += remainingQuantity * firstEntry.Precio;
+                                cantidadesUtilizadas.Add(remainingQuantity); // Guardamos la cantidad utilizada
+                                nodeCosts.Add(firstEntry.Precio); // Añadir costo parcial a la lista
                                 firstEntry.Cantidad -= remainingQuantity;
                                 remainingQuantity = 0; // Terminamos la salida
+                                nodeCount++; // Incrementamos el contador de nodos utilizados
                             }
                         }
 
+                        // Si usamos 2 o más nodos, mostramos el mensaje en la columna 3
+                        if (nodeCount >= 2)
+                        {
+                            DataGridAlmacen.Rows[newRowIndex].Cells[2].Value = $"Usado de {nodeCount} nodos";
+                        }
+
+                        // Mostramos los costos de cada nodo separados por un guion en la columna 5
+                        string costsDisplay = string.Join(" - ", nodeCosts.Select(c => c.ToString("N0")));
+                        DataGridAlmacen.Rows[newRowIndex].Cells[4].Value = costsDisplay;
+
                         // Actualizamos el DataGrid con la información de la salida
-                        // Asegúrate de limpiar los valores de entrada
                         int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value.ToString().Replace(".", "").Replace(",", ""));
-                        int newQuantity = previousQuantity - Convert.ToInt32(TxtQuantity.Text.Replace(".", "").Replace(",", ""));
+                        int newQuantity = previousQuantity - Convert.ToInt32(TxtQuantity.Text);
 
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = Convert.ToInt32(TxtQuantity.Text.Replace(".", "").Replace(",", "")).ToString("N0");
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
                         DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = newQuantity.ToString("N0");
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = (totalCost / Convert.ToInt32(TxtQuantity.Text.Replace(".", "").Replace(",", ""))).ToString("N0"); // Precio unitario promedio
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost.ToString("N0"); // Costo total de la salida
 
-                        // Asegúrate de limpiar el valor de la celda anterior al convertir
+                        // Calculamos el total de la salida multiplicando la cantidad retirada por el precio de cada nodo
+                        int totalSalida = 0;
+                        for (int i = 0; i < nodeCosts.Count; i++)
+                        {
+                            totalSalida += cantidadesUtilizadas[i] * nodeCosts[i]; // Multiplicamos cada cantidad por su respectivo precio
+                        }
+
+                        // Asignamos el total calculado en la columna 7 (índice 6) "Debe"
+                        DataGridAlmacen.Rows[newRowIndex].Cells[6].Value = totalSalida.ToString("N0"); // Columna "Debe" (índice 6)
+
                         int previousTotal = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 5].Value.ToString().Replace(".", "").Replace(",", ""));
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = (previousTotal - Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value.ToString().Replace(".", "").Replace(",", ""))).ToString("N0");
-
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = (previousTotal - totalSalida).ToString("N0");
                     }
-
-
-
-
                     break;
 
 
@@ -262,6 +277,8 @@ namespace Costos__Estructura_de_datos
 
                         int remainingQuantity = Convert.ToInt32(TxtQuantity.Text);
                         int totalCost = 0;
+                        List<int> cantidadesUtilizadas = new List<int>(); // Lista para almacenar las cantidades utilizadas
+                        List<int> costosPorUnidad = new List<int>(); // Lista para almacenar los costos por cada unidad utilizada
 
                         // Verificación previa: Calcula si hay suficiente inventario sin modificar la pila
                         int cantidadDisponible = 0;
@@ -287,16 +304,28 @@ namespace Costos__Estructura_de_datos
                                 // Usamos toda la cantidad de la última entrada
                                 remainingQuantity -= lastEntry.Cantidad;
                                 totalCost += lastEntry.Cantidad * lastEntry.Precio;
+                                cantidadesUtilizadas.Add(lastEntry.Cantidad); // Almacenamos la cantidad usada
+                                costosPorUnidad.Add(lastEntry.Precio); // Almacenamos el precio por unidad
                                 StackOfInventario.Pop(); // Eliminamos la entrada ya que se agotó
                             }
                             else
                             {
                                 // Usamos una parte de la cantidad de la última entrada
                                 totalCost += remainingQuantity * lastEntry.Precio;
+                                cantidadesUtilizadas.Add(remainingQuantity); // Almacenamos la cantidad usada
+                                costosPorUnidad.Add(lastEntry.Precio); // Almacenamos el precio por unidad
                                 lastEntry.Cantidad -= remainingQuantity;
                                 remainingQuantity = 0; // Terminamos la salida
                             }
                         }
+
+                        // Mostramos los costos por unidad utilizados separados por guiones en la columna correspondiente (índice 4)
+                        string costsDisplay = string.Join(" - ", costosPorUnidad.Select(c => c.ToString("N0")));
+                        DataGridAlmacen.Rows[newRowIndex].Cells[4].Value = costsDisplay;
+
+                        // Mostramos las cantidades utilizadas separadas por guiones en la columna correspondiente (índice 3)
+                        string cantidadesDisplay = string.Join(" - ", cantidadesUtilizadas.Select(c => c.ToString("N0")));
+                        DataGridAlmacen.Rows[newRowIndex].Cells[3].Value = cantidadesDisplay;
 
                         // Actualizamos el DataGrid con la información de la salida
                         int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value.ToString().Replace(".", "").Replace(",", ""));
@@ -312,9 +341,9 @@ namespace Costos__Estructura_de_datos
                         // Costo total de la salida
                         DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost.ToString("N0"); // Formato con comas
 
-                        // Actualiza el total restante
+                        // Actualiza el total restante en la columna 7 (índice +5)
                         int previousTotal = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 5].Value.ToString().Replace(".", "").Replace(",", ""));
-                        int totalAfterOutput = previousTotal - Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value.ToString().Replace(".", "").Replace(",", ""));
+                        int totalAfterOutput = previousTotal - totalCost;
                         DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = totalAfterOutput.ToString("N0"); // Formato con comas
                     }
 
