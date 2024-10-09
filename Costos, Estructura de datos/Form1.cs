@@ -1,3 +1,6 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
+
 namespace Costos__Estructura_de_datos
 {
     public partial class Form1 : Form
@@ -9,6 +12,9 @@ namespace Costos__Estructura_de_datos
         string CurrentYear = Convert.ToString(DateTime.Now);
         int Index = 0;
         int Matriz = 0;
+        CultureInfo latinoCulture = new CultureInfo("es-MX");
+        decimal quantity = 0;
+        decimal price = 0;
         private Queue<MovimientoInventario> QueueofInventori = new Queue<MovimientoInventario>();
         private Stack<MovimientoInventario> StackOfInventario = new Stack<MovimientoInventario>();
 
@@ -21,6 +27,11 @@ namespace Costos__Estructura_de_datos
             {
                 MessageBox.Show("Porfavor seleciona un tipo de formula");
                 return;
+            }
+            bool EsPrecioValido(string precio)
+            {
+                // Verificar que el campo no esté vacío y contenga solo números o decimales
+                return !string.IsNullOrWhiteSpace(precio) && Regex.IsMatch(precio, @"^[0-9]*(?:\.[0-9]*)?$");
             }
 
 
@@ -59,7 +70,7 @@ namespace Costos__Estructura_de_datos
                         return;
                     }
 
-                    if (requierePrecio && !int.TryParse(TxtPrice.Text, out result))
+                    if (TxtPrice.Enabled && !EsPrecioValido(TxtPrice.Text))
                     {
                         MessageBox.Show("No puedes ingresar letras en el campo de precio y tampoco puedes dejar este campo vacío");
                         return;
@@ -79,32 +90,36 @@ namespace Costos__Estructura_de_datos
                     {
                         if (newRowIndex == 0)
                         {
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = Convert.ToInt32(TxtQuantity.Text).ToString("N0");
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = Convert.ToInt32(TxtQuantity.Text).ToString("N0");
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = Convert.ToDecimal(TxtQuantity.Text).ToString("N0", latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = Convert.ToDecimal(TxtQuantity.Text).ToString("N0", latinoCulture);
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
 
-                            int totalCost = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost.ToString("N0");
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = totalCost.ToString("N0");
+                            decimal totalCost = Convert.ToDecimal(TxtQuantity.Text, latinoCulture) * Convert.ToDecimal(TxtPrice.Text, latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost.ToString("N2", latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = totalCost.ToString("N2", latinoCulture);
+
                         }
                         else
                         {
-                            int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value.ToString().Replace(".", "").Replace(",", ""));
-                            int newQuantity = previousQuantity + Convert.ToInt32(TxtQuantity.Text);
+                            decimal previousQuantity = Convert.ToDecimal(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value, latinoCulture);
+                            decimal quentity = Convert.ToDecimal(TxtQuantity.Text, latinoCulture);
+                            decimal newQuantity = previousQuantity + quentity;
 
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = Convert.ToInt32(TxtQuantity.Text).ToString("N0");
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = newQuantity.ToString("N0");
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = Convert.ToDecimal(TxtQuantity.Text).ToString("N0", latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = newQuantity.ToString("N0", latinoCulture);
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
 
-                            int currentCost = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = currentCost.ToString("N0");
+                            decimal currentCost = Convert.ToDecimal(TxtQuantity.Text, latinoCulture) * Convert.ToDecimal(TxtPrice.Text, latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = currentCost.ToString("N2", latinoCulture);
 
-                            int previousTotal = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 6].Value.ToString().Replace(".", "").Replace(",", ""));
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = (currentCost + previousTotal).ToString("N0");
+                            decimal previousTotal = Convert.ToDecimal(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 6].Value, latinoCulture);
+                            decimal updatedTotal = previousTotal + currentCost;  // Sumar los valores directamente como decimal
+
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = updatedTotal.ToString("N2", latinoCulture); // Mostrar el resultado en el formato adecuado
                         }
 
                         // Agregar la entrada a la cola
-                        QueueofInventori.Enqueue(new MovimientoInventario(DataTimeDay.Value, CmBoxDataType.Text, Convert.ToInt32(TxtPrice.Text), Convert.ToInt32(TxtQuantity.Text)));
+                        QueueofInventori.Enqueue(new MovimientoInventario(DataTimeDay.Value, CmBoxDataType.Text, Convert.ToDecimal(TxtPrice.Text, latinoCulture), Convert.ToInt32(TxtQuantity.Text)));
                     }
                     // Si es una salida
                     else if (CmBoxDataType.SelectedIndex == 1)
@@ -117,12 +132,12 @@ namespace Costos__Estructura_de_datos
                         }
 
                         int remainingQuantity = Convert.ToInt32(TxtQuantity.Text);
-                        List<int> nodeCosts = new List<int>(); // Lista para almacenar los costos de cada nodo
-                        List<int> cantidadesUtilizadas = new List<int>(); // Lista para almacenar las cantidades utilizadas de cada nodo
-                        int nodeCount = 0; // Contador de nodos utilizados
+                        List<decimal> nodeCosts = new List<decimal>(); // Lista para almacenar los costos de cada nodo
+                        List<decimal> cantidadesUtilizadas = new List<decimal>(); // Lista para almacenar las cantidades utilizadas de cada nodo
+                        decimal nodeCount = 0; // Contador de nodos utilizados
 
                         // Verificación previa: Calcula si hay suficiente inventario sin modificar la cola
-                        int cantidadDisponible = 0;
+                        decimal cantidadDisponible = 0;
                         foreach (var item in QueueofInventori)
                         {
                             cantidadDisponible += item.Cantidad;
@@ -145,7 +160,8 @@ namespace Costos__Estructura_de_datos
                                 // Usamos toda la cantidad de la primera entrada
                                 remainingQuantity -= firstEntry.Cantidad;
                                 cantidadesUtilizadas.Add(firstEntry.Cantidad); // Guardamos la cantidad utilizada
-                                nodeCosts.Add(firstEntry.Precio); // Añadir costo a la lista
+                                decimal ca = firstEntry.Precio, latinoCulture;
+                                nodeCosts.Add(ca); // Añadir costo a la lista
                                 QueueofInventori.Dequeue(); // Eliminamos la entrada ya que se agotó
                                 nodeCount++; // Incrementamos el contador de nodos utilizados
                             }
@@ -167,28 +183,31 @@ namespace Costos__Estructura_de_datos
                         }
 
                         // Mostramos los costos de cada nodo separados por un guion en la columna 5
-                        string costsDisplay = string.Join(" - ", nodeCosts.Select(c => c.ToString("N0")));
+                        string costsDisplay = string.Join(" - ", nodeCosts.Select(c => c.ToString(latinoCulture)));
                         DataGridAlmacen.Rows[newRowIndex].Cells[4].Value = costsDisplay;
 
                         // Actualizamos el DataGrid con la información de la salida
-                        int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value.ToString().Replace(".", "").Replace(",", ""));
-                        int newQuantity = previousQuantity - Convert.ToInt32(TxtQuantity.Text);
+                        decimal previousQuantity = Convert.ToDecimal(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value, latinoCulture);
+                        decimal newQuantity = previousQuantity - Convert.ToDecimal(TxtQuantity.Text, latinoCulture);
 
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = newQuantity.ToString("N0");
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text; // Cantidad que se está sacando
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = newQuantity.ToString (latinoCulture); // Cantidad actualizada después de la extracción
 
                         // Calculamos el total de la salida multiplicando la cantidad retirada por el precio de cada nodo
-                        int totalSalida = 0;
+                        decimal totalSalida = 0;
                         for (int i = 0; i < nodeCosts.Count; i++)
                         {
                             totalSalida += cantidadesUtilizadas[i] * nodeCosts[i]; // Multiplicamos cada cantidad por su respectivo precio
                         }
 
-                        // Asignamos el total calculado en la columna 7 (índice 6) "Debe"
-                        DataGridAlmacen.Rows[newRowIndex].Cells[6].Value = totalSalida.ToString("N0"); // Columna "Debe" (índice 6)
+                        DataGridAlmacen.Rows[newRowIndex].Cells[6].Value = totalSalida.ToString( latinoCulture); // Total en la columna "Debe"
 
-                        int previousTotal = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 5].Value.ToString().Replace(".", "").Replace(",", ""));
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = (previousTotal - totalSalida).ToString("N0");
+
+                        decimal previousTotal = Convert.ToDecimal(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 5].Value, latinoCulture);
+                        decimal newTotal = previousTotal - totalSalida; // Restamos el total de salida del total previo
+
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = newTotal.ToString(latinoCulture); // Actualizamos el total
+
                     }
                     break;
 
@@ -217,7 +236,7 @@ namespace Costos__Estructura_de_datos
                         MessageBox.Show("No puedes ingresar letras y tampoco puedes dejar este campo vacío");
                         return;
                     }
-                    if (requierePrecio && !int.TryParse(TxtPrice.Text, out result))
+                    if (TxtPrice.Enabled && !EsPrecioValido(TxtPrice.Text))
                     {
                         MessageBox.Show("No puedes ingresar letras en el campo de precio y tampoco puedes dejar este campo vacío");
                         return;
@@ -237,33 +256,36 @@ namespace Costos__Estructura_de_datos
                     {
                         if (newRowIndex == 0)
                         {
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = TxtQuantity.Text;
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = Convert.ToDecimal(TxtQuantity.Text).ToString("N0", latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = Convert.ToDecimal(TxtQuantity.Text).ToString("N0", latinoCulture);
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
 
-                            int totalPrice = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalPrice.ToString("N0");
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = totalPrice.ToString("N0");
+                            decimal totalCost = Convert.ToDecimal(TxtQuantity.Text, latinoCulture) * Convert.ToDecimal(TxtPrice.Text, latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost.ToString("N2", latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = totalCost.ToString("N2", latinoCulture);
+
                         }
                         else
                         {
-                            int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value.ToString().Replace(".", ""));
-                            int newQuantity = previousQuantity + Convert.ToInt32(TxtQuantity.Text);
+                            decimal previousQuantity = Convert.ToDecimal(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value, latinoCulture);
+                            decimal quentity = Convert.ToDecimal(TxtQuantity.Text, latinoCulture);
+                            decimal newQuantity = previousQuantity + quentity;
 
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = newQuantity.ToString("N0");
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = Convert.ToDecimal(TxtQuantity.Text).ToString("N0", latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = newQuantity.ToString("N0", latinoCulture);
                             DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
 
-                            int totalPrice = Convert.ToInt32(TxtQuantity.Text) * Convert.ToInt32(TxtPrice.Text);
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalPrice.ToString("N0");
+                            decimal currentCost = Convert.ToDecimal(TxtQuantity.Text, latinoCulture) * Convert.ToDecimal(TxtPrice.Text, latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = currentCost.ToString("N2", latinoCulture);
 
-                            // Aquí se convierte el valor de la celda anterior a int, eliminando las comas.
-                            int previousTotal = int.Parse(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 6].Value.ToString().Replace(".", ""));
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = (previousTotal + totalPrice).ToString("N0");
+                            decimal previousTotal = Convert.ToDecimal(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 6].Value, latinoCulture);
+                            decimal updatedTotal = previousTotal + currentCost;  // Sumar los valores directamente como decimal
+
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = updatedTotal.ToString("N2", latinoCulture); // Mostrar el resultado en el formato adecuado
                         }
 
-                        // Agregar la entrada a la pila
-                        StackOfInventario.Push(new MovimientoInventario(DataTimeDay.Value, CmBoxDataType.Text, Convert.ToInt32(TxtPrice.Text), Convert.ToInt32(TxtQuantity.Text)));
+                        // Agregar la entrada a la cola
+                        StackOfInventario.Push(new MovimientoInventario(DataTimeDay.Value, CmBoxDataType.Text, Convert.ToDecimal(TxtPrice.Text, latinoCulture), Convert.ToInt32(TxtQuantity.Text)));
                     }
                     // Si es una salida
                     else if (CmBoxDataType.SelectedIndex == 1)
@@ -276,12 +298,12 @@ namespace Costos__Estructura_de_datos
                         }
 
                         int remainingQuantity = Convert.ToInt32(TxtQuantity.Text);
-                        int totalCost = 0;
-                        List<int> cantidadesUtilizadas = new List<int>(); // Lista para almacenar las cantidades utilizadas
-                        List<int> costosPorUnidad = new List<int>(); // Lista para almacenar los costos por cada unidad utilizada
+                        List<decimal> nodeCosts = new List<decimal>(); // Lista para almacenar los costos de cada nodo
+                        List<decimal> cantidadesUtilizadas = new List<decimal>(); // Lista para almacenar las cantidades utilizadas de cada nodo
+                        decimal nodeCount = 0; // Contador de nodos utilizados
 
                         // Verificación previa: Calcula si hay suficiente inventario sin modificar la pila
-                        int cantidadDisponible = 0;
+                        decimal cantidadDisponible = 0;
                         foreach (var item in StackOfInventario)
                         {
                             cantidadDisponible += item.Cantidad;
@@ -297,54 +319,60 @@ namespace Costos__Estructura_de_datos
                         // Modificación real: Ahora que sabemos que hay suficiente inventario, modificamos la pila
                         while (remainingQuantity > 0 && StackOfInventario.Count > 0)
                         {
-                            MovimientoInventario lastEntry = StackOfInventario.Peek(); // Obtenemos la última entrada sin eliminarla
+                            MovimientoInventario lastEntry = StackOfInventario.Peek(); // Obtenemos la última entrada sin eliminarla (UEPS)
 
                             if (lastEntry.Cantidad <= remainingQuantity)
                             {
                                 // Usamos toda la cantidad de la última entrada
                                 remainingQuantity -= lastEntry.Cantidad;
-                                totalCost += lastEntry.Cantidad * lastEntry.Precio;
-                                cantidadesUtilizadas.Add(lastEntry.Cantidad); // Almacenamos la cantidad usada
-                                costosPorUnidad.Add(lastEntry.Precio); // Almacenamos el precio por unidad
+                                cantidadesUtilizadas.Add(lastEntry.Cantidad); // Guardamos la cantidad utilizada
+                                decimal ca = lastEntry.Precio;
+                                nodeCosts.Add(ca); // Añadir costo a la lista
                                 StackOfInventario.Pop(); // Eliminamos la entrada ya que se agotó
+                                nodeCount++; // Incrementamos el contador de nodos utilizados
                             }
                             else
                             {
                                 // Usamos una parte de la cantidad de la última entrada
-                                totalCost += remainingQuantity * lastEntry.Precio;
-                                cantidadesUtilizadas.Add(remainingQuantity); // Almacenamos la cantidad usada
-                                costosPorUnidad.Add(lastEntry.Precio); // Almacenamos el precio por unidad
+                                cantidadesUtilizadas.Add(remainingQuantity); // Guardamos la cantidad utilizada
+                                nodeCosts.Add(lastEntry.Precio); // Añadir costo parcial a la lista
                                 lastEntry.Cantidad -= remainingQuantity;
                                 remainingQuantity = 0; // Terminamos la salida
+                                nodeCount++; // Incrementamos el contador de nodos utilizados
                             }
                         }
 
-                        // Mostramos los costos por unidad utilizados separados por guiones en la columna correspondiente (índice 4)
-                        string costsDisplay = string.Join(" - ", costosPorUnidad.Select(c => c.ToString("N0")));
+                        // Si usamos 2 o más nodos, mostramos el mensaje en la columna 3
+                        if (nodeCount >= 2)
+                        {
+                            DataGridAlmacen.Rows[newRowIndex].Cells[2].Value = $"Usado de {nodeCount} nodos";
+                        }
+
+                        // Mostramos los costos de cada nodo separados por un guion en la columna 5
+                        string costsDisplay = string.Join(" - ", nodeCosts.Select(c => c.ToString(latinoCulture)));
                         DataGridAlmacen.Rows[newRowIndex].Cells[4].Value = costsDisplay;
 
-                        // Mostramos las cantidades utilizadas separadas por guiones en la columna correspondiente (índice 3)
-                        string cantidadesDisplay = string.Join(" - ", cantidadesUtilizadas.Select(c => c.ToString("N0")));
-                        DataGridAlmacen.Rows[newRowIndex].Cells[3].Value = cantidadesDisplay;
-
                         // Actualizamos el DataGrid con la información de la salida
-                        int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value.ToString().Replace(".", "").Replace(",", ""));
-                        int newQuantity = previousQuantity - Convert.ToInt32(TxtQuantity.Text);
+                        decimal previousQuantity = Convert.ToDecimal(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value, latinoCulture);
+                        decimal newQuantity = previousQuantity - Convert.ToDecimal(TxtQuantity.Text, latinoCulture);
 
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = newQuantity.ToString("N0"); // Formato con comas
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text; // Cantidad que se está sacando
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = newQuantity.ToString(latinoCulture); // Cantidad actualizada después de la extracción
 
-                        // Calcula el precio unitario promedio
-                        int unitPriceAverage = totalCost / Convert.ToInt32(TxtQuantity.Text);
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = unitPriceAverage.ToString("N0"); // Formato con comas
+                        // Calculamos el total de la salida multiplicando la cantidad retirada por el precio de cada nodo
+                        decimal totalSalida = 0;
+                        for (int i = 0; i < nodeCosts.Count; i++)
+                        {
+                            totalSalida += cantidadesUtilizadas[i] * nodeCosts[i]; // Multiplicamos cada cantidad por su respectivo precio
+                        }
 
-                        // Costo total de la salida
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost.ToString("N0"); // Formato con comas
+                        DataGridAlmacen.Rows[newRowIndex].Cells[6].Value = totalSalida.ToString(latinoCulture); // Total en la columna "Debe"
 
-                        // Actualiza el total restante en la columna 7 (índice +5)
-                        int previousTotal = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 5].Value.ToString().Replace(".", "").Replace(",", ""));
-                        int totalAfterOutput = previousTotal - totalCost;
-                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = totalAfterOutput.ToString("N0"); // Formato con comas
+
+                        decimal previousTotal = Convert.ToDecimal(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 5].Value, latinoCulture);
+                        decimal newTotal = previousTotal - totalSalida; // Restamos el total de salida del total previo
+
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = newTotal.ToString(latinoCulture); // Actualizamos el total
                     }
 
                     break;
@@ -354,46 +382,41 @@ namespace Costos__Estructura_de_datos
 
                 case "PROMEDIO":
 
-                    // Verificar que el año sea el correcto
                     if (selectedYear == CurrentYear)
                     {
                         MessageBox.Show("La fecha debe de ser de este mismo año");
                         return;
                     }
 
-                    // Verificar que se haya seleccionado una fórmula
                     if (ComBoxFormula.SelectedIndex == -1)
                     {
-                        MessageBox.Show("Debes de seleccionar un tipo de fórmula");
+                        MessageBox.Show("Debes de seleccionar un tipo de dato");
                         return;
                     }
 
-                    // Verificar que se haya seleccionado un tipo de dato
                     if (CmBoxDataType.SelectedIndex == -1)
                     {
                         MessageBox.Show("Debes de seleccionar un tipo de dato");
                         return;
                     }
 
-                    // Validar que la cantidad sea un número válido
                     if (!int.TryParse(TxtQuantity.Text, out result))
                     {
                         MessageBox.Show("No puedes ingresar letras y tampoco puedes dejar este campo vacío");
                         return;
                     }
 
-                    // Validar el campo de precio si es requerido
-                    decimal precio = 0; // Inicializar la variable
-                    if (requierePrecio && !decimal.TryParse(TxtPrice.Text, out precio))
+                    if (TxtPrice.Enabled && !EsPrecioValido(TxtPrice.Text))
                     {
                         MessageBox.Show("No puedes ingresar letras en el campo de precio y tampoco puedes dejar este campo vacío");
                         return;
                     }
 
+
                     // Agregar una nueva fila vacía y obtener el índice de la nueva fila
                     newRowIndex = DataGridAlmacen.Rows.Add();
 
-                    // Determinar la columna para el tipo de dato (1 para entrada, 2 para salida)
+                    // Determinar la columna para el tipo de dato
                     typeColumnIndex = CmBoxDataType.SelectedIndex == 0 ? 1 : 2;
 
                     // Asignar valores a las celdas específicas de la nueva fila
@@ -402,89 +425,80 @@ namespace Costos__Estructura_de_datos
                     // Si es una entrada
                     if (CmBoxDataType.SelectedIndex == 0)
                     {
-                        // Para la primera fila
                         if (newRowIndex == 0)
                         {
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = TxtQuantity.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = precio.ToString("N2");
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = Convert.ToDecimal(TxtQuantity.Text).ToString("N0", latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = Convert.ToDecimal(TxtQuantity.Text).ToString("N0", latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
 
-                            decimal totalPrice = Convert.ToDecimal(TxtQuantity.Text) * precio;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalPrice.ToString("N2");
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = totalPrice.ToString("N2");
+                            decimal totalCost = Convert.ToDecimal(TxtQuantity.Text, latinoCulture) * Convert.ToDecimal(TxtPrice.Text, latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalCost.ToString("N2", latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = totalCost.ToString("N2", latinoCulture);
+
                         }
-                        else // Para las filas subsecuentes
+                        else
                         {
-                            int previousQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value.ToString().Replace(",", ""));
-                            int newQuantity = previousQuantity + Convert.ToInt32(TxtQuantity.Text);
+                            decimal previousQuantity = Convert.ToDecimal(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value, latinoCulture);
+                            decimal quentity = Convert.ToDecimal(TxtQuantity.Text, latinoCulture);
+                            decimal newQuantity = previousQuantity + quentity;
 
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = TxtQuantity.Text;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = newQuantity.ToString("N0");
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = precio.ToString("N2");
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = Convert.ToDecimal(TxtQuantity.Text).ToString("N0", latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = newQuantity.ToString("N0", latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 3].Value = TxtPrice.Text;
 
-                            decimal totalPrice = Convert.ToDecimal(TxtQuantity.Text) * precio;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalPrice.ToString("N2");
+                            decimal currentCost = Convert.ToDecimal(TxtQuantity.Text, latinoCulture) * Convert.ToDecimal(TxtPrice.Text, latinoCulture);
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = currentCost.ToString("N2", latinoCulture);
 
-                            decimal previousTotal = decimal.Parse(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 6].Value.ToString().Replace(".", ""));
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = (previousTotal + totalPrice).ToString("N2");
+                            decimal previousTotal = Convert.ToDecimal(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 6].Value, latinoCulture);
+                            decimal updatedTotal = previousTotal + currentCost;  // Sumar los valores directamente como decimal
+
+                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 6].Value = updatedTotal.ToString("N2", latinoCulture); // Mostrar el resultado en el formato adecuado
                         }
 
-                        // Agregar la entrada a la pila
-                        StackOfInventario.Push(new MovimientoInventario(DataTimeDay.Value, CmBoxDataType.Text, (int)Math.Round(precio), Convert.ToInt32(TxtQuantity.Text))); // Convertir a int
+                        // Agregar la entrada a la cola
+                        StackOfInventario.Push(new MovimientoInventario(DataTimeDay.Value, CmBoxDataType.Text, Convert.ToDecimal(TxtPrice.Text, latinoCulture), Convert.ToInt32(TxtQuantity.Text)));
                     }
-                    // Si es una salida
-                    else if (CmBoxDataType.SelectedIndex == 1) // Si es una salida
+                    // Si es una salida (Promedio ponderado)
+                    else if (CmBoxDataType.SelectedIndex == 1)
                     {
-                        // Asegurarse de que haya filas anteriores
-                        if (newRowIndex == 0)
+                        if (StackOfInventario.Count == 0)
                         {
-                            MessageBox.Show("No puedes hacer una salida si no hay inventario.");
+                            MessageBox.Show("No puedes sacar artículos porque el almacén está vacío");
+                            DataGridAlmacen.Rows.RemoveAt(newRowIndex);
                             return;
                         }
 
-                        // Obtener la cantidad total en el inventario
-                        if (newRowIndex > 0) // Asegúrate de que newRowIndex sea válido
+                        int remainingQuantity = Convert.ToInt32(TxtQuantity.Text);
+                        decimal totalSaldo = Convert.ToDecimal(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 5].Value, latinoCulture); // Última columna (saldo total)
+                        decimal totalQuantity = Convert.ToDecimal(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value, latinoCulture); // Cantidad total en inventario
+
+                        // Verificar que haya suficiente inventario
+                        if (remainingQuantity > totalQuantity)
                         {
-                            int totalQuantity = Convert.ToInt32(DataGridAlmacen.Rows[newRowIndex - 1].Cells[3].Value.ToString().Replace(",", ""));
-                            // Validar que la cantidad a sacar no sea mayor que la disponible
-                            int cantidadASacar = Convert.ToInt32(TxtQuantity.Text);
-                            if (cantidadASacar > totalQuantity)
-                            {
-                                MessageBox.Show("No puedes sacar más de lo que hay en inventario");
-                                return;
-                            }
-
-                            // Calcular el precio promedio
-                            decimal previousTotalPrice = decimal.Parse(DataGridAlmacen.Rows[newRowIndex - 1].Cells[typeColumnIndex + 5].Value.ToString().Replace(",", ""));
-                            decimal averagePrice = previousTotalPrice / totalQuantity;
-
-                            // Actualizar la cantidad en el inventario
-                            int nuevaCantidad = totalQuantity - cantidadASacar;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = cantidadASacar.ToString("N0");
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = nuevaCantidad.ToString("N0");
-
-                            // Calcular el total del precio de salida
-                            decimal totalPrecioSalida = cantidadASacar * averagePrice;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalPrecioSalida.ToString("N2");
-
-                            // Actualizar el total del inventario
-                            decimal nuevoTotal = previousTotalPrice - totalPrecioSalida;
-                            DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = nuevoTotal.ToString("N2");
-
-                            // Agregar la salida a la pila
-                            StackOfInventario.Push(new MovimientoInventario(DataTimeDay.Value, CmBoxDataType.Text, (int)Math.Round(averagePrice), cantidadASacar)); // Convertir a int
+                            MessageBox.Show("No hay suficiente inventario para completar la salida");
+                            DataGridAlmacen.Rows.RemoveAt(newRowIndex);
+                            return;
                         }
+
+                        // Calcular el costo promedio ponderado
+                        decimal avgCost = Math.Round(totalSaldo / totalQuantity, 4);
+
+                        // Calcular el total de la salida usando el promedio ponderado
+                        decimal totalSalida = remainingQuantity * avgCost;
+
+                        // Actualizar el inventario con la nueva cantidad
+                        decimal newQuantity = totalQuantity - remainingQuantity;
+                        decimal newSaldo = totalSaldo - totalSalida;
+
+                        // Actualizar el DataGrid
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex].Value = remainingQuantity.ToString("N0", latinoCulture); // Cantidad que se está sacando
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 1].Value = newQuantity.ToString("N0", latinoCulture); // Cantidad restante
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 2].Value = avgCost;
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 4].Value = totalSalida.ToString("N2", latinoCulture); // Mostrar el total de la salida
+                        DataGridAlmacen.Rows[newRowIndex].Cells[typeColumnIndex + 5].Value = newSaldo.ToString("N2", latinoCulture); // Actualizar el saldo total
                     }
-
                     break;
-
-
-
             }
-
-
-
-
         }
 
         private void BtnAccept_Click(object sender, EventArgs e)

@@ -10,7 +10,7 @@ namespace Costos__Estructura_de_datos
     {
         public DateTime Fecha { get; set; }
         public string TipoDeDato { get; set; }
-        public int Precio { get; set; }
+        public decimal Precio { get; set; }
         public int Cantidad { get; set; }
 
 
@@ -23,7 +23,7 @@ namespace Costos__Estructura_de_datos
             Cantidad = 0;
         }
 
-        public MovimientoInventario(DateTime fecha, string tipoDeDato, int precio, int cantidad)
+        public MovimientoInventario(DateTime fecha, string tipoDeDato, decimal precio, int cantidad)
         {
             Fecha = fecha;
             TipoDeDato = tipoDeDato;
